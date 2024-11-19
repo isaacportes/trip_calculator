@@ -1,0 +1,32 @@
+{
+  "Geral": {
+    "Andre": 34.28,
+    "Davi": 130.0,
+    "Livia": 0.0,
+    "Nathan": 575.44,
+    "Raquel": 72.26,
+    "Mariana": 542.0,
+    "Jade": 0.0,
+    "Rebeca": 0.0,
+    "Ruth": 0.0,
+    "Emilio": 0.0,
+    "Matheus": 0.0,
+    "Pedro": 0.0,
+    "Vitor": 0.0,
+    "Isaac": 73.64,
+    "Julia": 543.5
+  },
+  "Beer": {
+    "Nathan": 680.0,
+    "Isaac": 0.0,
+    "Andre": 0.0,
+    "Davi": 0.0,
+    "Pedro": 0.0,
+    "Vitor": 0.0,
+    "Julia": 0.0,
+    "Matheus": 0.0,
+    "Mariana": 0.0,
+    "Emilio": 0.0,
+    "Livia": 0.0
+  }
+}
