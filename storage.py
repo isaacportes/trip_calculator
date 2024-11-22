@@ -1,55 +1,91 @@
-# storage.py
-
 import json
 import os
 
-DATA_FILE = "expenses.json"
 
-# Load all groups from the data file if it exists
 def load_expenses():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as file:
+    """Loads expenses from the JSON file."""
+    if os.path.exists("expenses.json"):
+        with open("expenses.json", "r") as file:
             return json.load(file)
     return {}
 
-# Save all groups to the data file
+
 def save_expenses(expenses):
-    with open(DATA_FILE, "w") as file:
-        json.dump(expenses, file)
+    """Saves expenses to the JSON file."""
+    with open("expenses.json", "w") as file:
+        json.dump(expenses, file, indent=4)
 
-# Add or update an expense for a person within a specific group
-def add_expense(expenses, group_name, name, amount):
+
+def add_expense_item(expenses, group_name, person, description, amount):
+    """Adds an expense item for a specific person in the group."""
     if group_name not in expenses:
-        expenses[group_name] = {}
-    if name in expenses[group_name]:
-        expenses[group_name][name] += amount
-    else:
-        expenses[group_name][name] = amount
+        expenses[group_name] = {"members": [], "expenses": {}}
 
-# Update a specific expense in a group
-def update_expense(expenses, group_name, name, amount):
-    if group_name in expenses and name in expenses[group_name]:
-        expenses[group_name][name] = amount
-        print(f"Updated {name}'s expense to ${amount:.2f} in group '{group_name}'.")
-    else:
-        print(f"No expense found for {name} in group '{group_name}'.")
+    if person not in expenses[group_name]["expenses"]:
+        expenses[group_name]["expenses"][person] = []
 
-# Delete an expense for a person in a group
-def delete_expense(expenses, group_name, name):
-    if group_name in expenses and name in expenses[group_name]:
-        del expenses[group_name][name]
-        print(f"Deleted expense for {name} in group '{group_name}'.")
-    else:
-        print(f"No expense found for {name} in group '{group_name}'.")
+    expenses[group_name]["expenses"][person].append({"description": description, "amount": amount})
+    save_expenses(expenses)
 
-# Delete an entire group
+
+def delete_expense_item(expenses, group_name, person, index):
+    """Deletes a specific expense item for a person in the group."""
+    if group_name in expenses and person in expenses[group_name]["expenses"]:
+        try:
+            expenses[group_name]["expenses"][person].pop(index)
+            if not expenses[group_name]["expenses"][person]:  # Remove the person if no expenses left
+                del expenses[group_name]["expenses"][person]
+            save_expenses(expenses)
+        except IndexError:
+            print(f"Invalid index. {person} has no expense at index {index}.")
+
+
 def delete_group(expenses, group_name):
+    """Deletes an entire group."""
     if group_name in expenses:
         del expenses[group_name]
-        print(f"Deleted group '{group_name}'.")
-    else:
-        print(f"No group found with the name '{group_name}'.")
+        save_expenses(expenses)
 
-# Retrieve a specific group's expenses
+
 def get_group(expenses, group_name):
+    """Returns the expenses for a specific group."""
     return expenses.get(group_name, {})
+
+
+def create_group(expenses, group_name, members):
+    """Creates a new group with a list of members."""
+    if group_name in expenses:
+        raise ValueError(f"Group '{group_name}' already exists.")
+    # Validate and clean member list
+    members = [member.strip() for member in members if member.strip()]
+    if not members:
+        raise ValueError("Cannot create a group without valid members.")
+    expenses[group_name] = {"members": members, "expenses": {}}
+    save_expenses(expenses)
+
+
+def add_group_member(expenses, group_name, member_name):
+    """Adds a new member to the specified group."""
+    if group_name not in expenses:
+        raise ValueError(f"Group '{group_name}' does not exist.")
+    if not member_name or member_name.strip() == "":
+        raise ValueError("Invalid member name. Member name cannot be empty.")
+    if "," in member_name:
+        raise ValueError("Member name cannot contain commas.")
+    if member_name in expenses[group_name]["members"]:
+        raise ValueError(f"Member '{member_name}' is already in the group.")
+    expenses[group_name]["members"].append(member_name.strip())
+    save_expenses(expenses)
+
+
+def remove_group_member(expenses, group_name, member_name):
+    """Removes a member from the specified group."""
+    if group_name not in expenses:
+        raise ValueError(f"Group '{group_name}' does not exist.")
+    if member_name not in expenses[group_name]["members"]:
+        raise ValueError(f"Member '{member_name}' is not in the group.")
+    expenses[group_name]["members"].remove(member_name)
+    # Optionally, remove all expenses associated with the member
+    if member_name in expenses[group_name]["expenses"]:
+        del expenses[group_name]["expenses"][member_name]
+    save_expenses(expenses)
