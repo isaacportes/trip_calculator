@@ -1,37 +1,60 @@
-# calculator.py
+def calculate_balances(expenses, members):
+    """
+    Calculates the balances for each group member based on expenses.
 
-def add_expense(expenses, group_name, name, amount):
-    """Adds or updates the expense for each person in the specified group."""
-    if name in expenses[group_name]:
-        expenses[group_name][name] += amount
-    else:
-        expenses[group_name][name] = amount
+    :param expenses: Dictionary of expenses where keys are names and values are lists of expense items.
+    :param members: List of group members.
+    :return: A tuple of (balances, payment instructions, total balance).
+    """
+    balances = {member: 0 for member in members}
+    total_balance = 0
 
+    # Calculate balances
+    for person, person_expenses in expenses.items():
+        for expense in person_expenses:
+            balances[person] += expense["amount"]
+            total_balance += expense["amount"]
 
-def calculate_balances(expenses):
-    total_balance = sum(expenses.values())
-    equal_share = total_balance / len(expenses)
+    # Equal share of expenses
+    equal_share = total_balance / len(members)
 
-    # Calculate balance for each person
-    balances = {name: round(amount - equal_share, 2) for name, amount in expenses.items()}
+    # Adjust balances
+    for member in balances:
+        balances[member] -= equal_share
 
-    to_pay = [(name, balance) for name, balance in balances.items() if balance < 0]
-    to_receive = [(name, balance) for name, balance in balances.items() if balance > 0]
+    # Create payment instructions
+    creditors = {k: v for k, v in balances.items() if v > 0}
+    debtors = {k: -v for k, v in balances.items() if v < 0}
 
     payment_instructions = []
-    for name_pay, balance_pay in to_pay:
-        while balance_pay < 0 and to_receive:
-            name_receive, balance_receive = to_receive[0]
-            payment = min(abs(balance_pay), balance_receive)
-            payment_instructions.append(f"{name_pay} needs to pay {name_receive}: ${payment:.2f}")
+    while debtors:
+        # Get a debtor and their debt
+        debtor, debt = next(iter(debtors.items()))
 
-            balance_pay += payment
-            balance_receive -= payment
+        if not creditors:
+            break  # No more creditors to pay
 
-            if balance_receive == 0:
-                to_receive.pop(0)
-            else:
-                to_receive[0] = (name_receive, balance_receive)
+        # Get a creditor and their credit
+        creditor, credit = next(iter(creditors.items()))
+
+        # Determine payment amount
+        payment = min(debt, credit)
+        payment_instructions.append(f"{debtor} pays ${payment:.2f} to {creditor}")
+
+        # Update balances
+        debt -= payment
+        credit -= payment
+
+        # Update debtors and creditors
+        if debt == 0:
+            del debtors[debtor]
+        else:
+            debtors[debtor] = debt
+
+        if credit == 0:
+            del creditors[creditor]
+        else:
+            creditors[creditor] = credit
 
     return balances, payment_instructions, total_balance
 
